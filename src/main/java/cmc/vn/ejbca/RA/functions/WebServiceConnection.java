@@ -1,4 +1,4 @@
-package cmc.vn.ejbca.RA;
+package cmc.vn.ejbca.RA.functions;
 
 import cmc.vn.ejbca.RA.api.AvailableCA;
 import cmc.vn.ejbca.RA.api.CAs;
@@ -17,9 +17,8 @@ import javax.xml.namespace.QName;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.security.KeyPair;
+import java.security.Security;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -127,8 +126,8 @@ public class WebServiceConnection {
         try {
             KeyStore keyStore = ejbcaraws.softTokenRequest(userData, hardTokenSN, keyspec,
                     keyalg);
-            System.out.println("\n\n");
-            System.out.println("Soft Token Request: \n" + new String(keyStore.getKeystoreData(), StandardCharsets.UTF_8));
+//            System.out.println("\n\n");
+//            System.out.println("Soft Token Request: \n" + new String(keyStore.getKeystoreData(), StandardCharsets.UTF_8));
             return keyStore;
         } catch (EjbcaException_Exception e) {
             e.printStackTrace();
@@ -153,8 +152,8 @@ public class WebServiceConnection {
         }
     }
 
-    CertificateResponse certificateRequestFromP10(EjbcaWS ejbcaraws, org.bouncycastle.jce.PKCS10CertificationRequest requestData, String userName, String password,
-                                                  String hardTokenSN, String responseType)
+    public CertificateResponse certificateRequestFromP10(EjbcaWS ejbcaraws, org.bouncycastle.jce.PKCS10CertificationRequest requestData, String userName, String password,
+                                                         String hardTokenSN, String responseType)
             throws Exception {
         try {
             CertificateResponse certenv = ejbcaraws.pkcs10Request(userName, password, new String(Base64.encode(requestData.getEncoded())), hardTokenSN,
@@ -166,9 +165,9 @@ public class WebServiceConnection {
         }
     }
 
-    CertificateResponse certificateRequestFromFile(EjbcaWS ejbcaraws, MultipartFile fileRequest, UserDataVOWS userData,
-                                                   int requestType,
-                                                   String hardTokenSN, String responseType)
+    public CertificateResponse certificateRequestFromFile(EjbcaWS ejbcaraws, MultipartFile fileRequest, UserDataVOWS userData,
+                                                          int requestType,
+                                                          String hardTokenSN, String responseType)
             throws Exception {
 
         //Read data from file
@@ -197,10 +196,10 @@ public class WebServiceConnection {
     /**
      * pkcs12Req
      **/
-    org.ejbca.core.protocol.ws.client.gen.KeyStore pkcs12Req(EjbcaWS ejbcaraws,
-                                                             String username, String password,
-                                                             String hardTokenSN, String keyspec,
-                                                             String keyalg) throws Exception {
+    public org.ejbca.core.protocol.ws.client.gen.KeyStore pkcs12Req(EjbcaWS ejbcaraws,
+                                                                    String username, String password,
+                                                                    String hardTokenSN, String keyspec,
+                                                                    String keyalg) throws Exception {
         try {
             KeyStore keyStore = ejbcaraws.pkcs12Req(username, password, hardTokenSN,
                     keyspec, keyalg);
@@ -217,7 +216,7 @@ public class WebServiceConnection {
     /**
      * Generate Server Certificate from P12
      **/
-    java.security.cert.Certificate certificateFromP12(KeyStore p12Req, String type, String password) throws Exception {
+    public java.security.cert.Certificate certificateFromP12(KeyStore p12Req, String type, String password) throws Exception {
         try {
             java.security.KeyStore ks = KeyStoreHelper.getKeyStore(p12Req.getKeystoreData(), type, password);
             Enumeration<String> en = ks.aliases();
@@ -238,8 +237,8 @@ public class WebServiceConnection {
     /**
      * Find Certificate
      **/
-    List<Certificate> findCerts(EjbcaWS ejbcaraws, String username,
-                                boolean onlyValid) throws Exception {
+    public List<Certificate> findCerts(EjbcaWS ejbcaraws, String username,
+                                       boolean onlyValid) throws Exception {
         try {
             return ejbcaraws.findCerts(username, onlyValid);
         } catch (Exception e) {
@@ -281,7 +280,7 @@ public class WebServiceConnection {
         }
     }
 
-    RevokeStatus checkRevokation(EjbcaWS ejbcaraws, Certificate cert) {
+    public RevokeStatus checkRevokation(EjbcaWS ejbcaraws, Certificate cert) {
         try {
             X509Certificate x509Cert = (X509Certificate) CertTools
                     .getCertfromByteArray(cert.getRawCertificateData());
@@ -335,7 +334,7 @@ public class WebServiceConnection {
         }
     }
 
-    boolean revokeCertificate(EjbcaWS ejbcaraws, Certificate cert, int reason) throws Exception {
+    public boolean revokeCertificate(EjbcaWS ejbcaraws, Certificate cert, int reason) throws Exception {
         try {
             X509Certificate x509Cert = (X509Certificate) CertTools
                     .getCertfromByteArray(cert.getRawCertificateData());
@@ -352,12 +351,13 @@ public class WebServiceConnection {
     /**
      * Generate Keys
      **/
-    KeyPair generateKeys(String keySpec, String keyalgorithmRsa) throws Exception {
+    public KeyPair generateKeys(String keySpec, String keyalgorithmRsa) throws Exception {
         try {
+            Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
             KeyPair keys = KeyTools.genKeys(keySpec, keyalgorithmRsa);
-            System.out.println("\n\n");
-            System.out.println("Private Key: " + keys.getPrivate());
-            System.out.println("Public key : " + keys.getPublic());
+//            System.out.println("\n\n");
+//            System.out.println("Private Key: " + keys.getPrivate());
+//            System.out.println("Public key : " + keys.getPublic());
             return keys;
         } catch (Exception e) {
             e.printStackTrace();

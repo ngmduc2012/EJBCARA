@@ -1,4 +1,4 @@
-package cmc.vn.ejbca.RA;
+package cmc.vn.ejbca.RA.functions;
 
 import cmc.vn.ejbca.RA.api.DeleteUser;
 import cmc.vn.ejbca.RA.api.FindUsers;
