@@ -177,7 +177,7 @@ public class RaApplication {
         CertificateResponse certificateResponse = connection.certificateRequestFromFile(
                 ejbcaraws(),
                 fileRequest,
-                user.findUserByUserName(ejbcaraws(), userName),
+                user.findUserByUserName(ejbcaraws(), userName), //Find the user
                 Integer.parseInt(requestType),
                 hardTokenSN,
                 responseType);
@@ -222,6 +222,7 @@ public class RaApplication {
     public ResponseEntity<String> revokeCertificate(@RequestBody RevokeCertificate revoke) throws Exception {
         if (connection.revokeCertificate(
                 ejbcaraws(),
+                // Find the Certificate that want to revoke
                 connection.findCerts(ejbcaraws(), revoke.getUserName(), revoke.isOnlyValid()).get(revoke.getIdCert()),
                 revoke.getReason())) {
             return ResponseEntity.ok("Success");
@@ -495,8 +496,13 @@ public class RaApplication {
      */
     @PostMapping("/certificateRequestFromP10")
     public ResponseEntity<String> certificateRequestFromP10(@RequestBody CertificateRequestFromP10 cert) throws Exception {
+        //Generate Keys
         KeyPair keys = connection.generateKeys(cert.getKeySpec(), cert.getKeyalgorithmRsa());
+
+        //Generate pkcs10 Certification Request
         PKCS10CertificationRequest pkcs10Cert = client.pkcs10CertificationRequest(cert.getSignatureAlgorithm(), cert.getDn(), keys);
+
+        //Generate Certificate Response
         CertificateResponse certenv = connection.certificateRequestFromP10(
                 ejbcaraws(),
                 pkcs10Cert,
@@ -504,6 +510,8 @@ public class RaApplication {
                 cert.getPassword(),
                 cert.getHardTokenSN(),
                 cert.getResponseType());
+
+        //Change Certificate Response data to Base64 sring
         String encoded = Base64.getEncoder().encodeToString(certenv.getData());
         return ResponseEntity.ok(encoded);
     }

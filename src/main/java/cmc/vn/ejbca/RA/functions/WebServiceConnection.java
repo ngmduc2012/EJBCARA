@@ -29,6 +29,7 @@ public class WebServiceConnection {
 
     /**
      * Connect to Web Server
+     * Follow: https://download.primekey.com/docs/EJBCA-Enterprise/6_15_2/Web_Service_Interface.html
      **/
     public EjbcaWS connectService(String urlstr, String truststore, String passTruststore, String superadmin, String passSuperadmin) throws Exception {
         try {
@@ -57,14 +58,17 @@ public class WebServiceConnection {
     public List<AvailableCA> getAvailableCA(EjbcaWS ejbcaraws) throws Exception {
         List<AvailableCA> availableCAList = new ArrayList<AvailableCA>();
         System.out.println("\n\n");
+        // if no AvailableCA be getted
         if (ejbcaraws.getAvailableCAs().isEmpty()) {
             System.out.println("No Available CAs");
         } else {
             for (NameAndId i : ejbcaraws.getAvailableCAs()
             ) {
+                // add AvailableCA to list
                 availableCAList.add(new AvailableCA(i.getName() , i.getId()));
             }
         }
+        // return list AvailableCA (even null)
         return availableCAList;
     }
 
@@ -74,21 +78,24 @@ public class WebServiceConnection {
     public List<EndEntityList> getEndEntity(EjbcaWS ejbcaraws) throws Exception {
         System.out.println("\n\n");
         List<EndEntityList> endEntityList = new ArrayList<EndEntityList>();
+        // if get no Authorized End Entity Profiles
         if (ejbcaraws.getAuthorizedEndEntityProfiles().isEmpty()) {
             System.out.println("No End Entity Profile");
         } else {
             for (NameAndId i : ejbcaraws.getAuthorizedEndEntityProfiles()
             ) {
+                // add list
                 endEntityList.add(new EndEntityList(
-                        i.getName(),
-                        i.getId(),
-                        availableCA(ejbcaraws.getAvailableCertificateProfiles(i.getId())),
-                        availableCP(ejbcaraws.getAvailableCertificateProfiles(i.getId()))
+                        i.getName(), //name
+                        i.getId(),   //id
+                        availableCA(ejbcaraws.getAvailableCertificateProfiles(i.getId())), //list Certificate Profiles
+                        availableCP(ejbcaraws.getAvailableCertificateProfiles(i.getId()))  //list CAs Profiles
                 ));
 
             }
 
         }
+        //return list End Entity (even null)
         return endEntityList;
     }
 
@@ -99,9 +106,11 @@ public class WebServiceConnection {
         } else {
             for (NameAndId i : available
             ) {
+                //Add list
                 cPsList.add(new CPs(i.getName(), i.getId()));
             }
         }
+        //return list Certificate Profiles (even null)
         return cPsList;
     }
 
@@ -112,9 +121,11 @@ public class WebServiceConnection {
         } else {
             for (NameAndId i : available
             ) {
+                //Add list
                 cAsList.add(new CAs(i.getName(), i.getId()));
             }
         }
+        //return list CAs (even null)
         return cAsList;
     }
 
@@ -169,11 +180,14 @@ public class WebServiceConnection {
                                                           int requestType,
                                                           String hardTokenSN, String responseType)
             throws Exception {
-
-        //Read data from file
+        //Declare Function Units
         Units units = new Units();
+
+        //Read file request
         byte[] request = fileRequest.getBytes();
+        //Convest file to String
         String requestText = new String(request, StandardCharsets.UTF_8);
+        //Convest to PKCS10 Certification Request
         org.bouncycastle.pkcs.PKCS10CertificationRequest requestData = units.convertPemToPKCS10CertificationRequest(requestText);
         try {
             CertificateResponse certenv = certificateRequest(ejbcaraws, requestData, userData, requestType, hardTokenSN, responseType);
@@ -184,13 +198,13 @@ public class WebServiceConnection {
         }
     }
 
-    void showCertificateRespond(CertificateResponse certificateResponse) throws Exception {
-        String caString = new String(certificateResponse.getData(), StandardCharsets.UTF_8);
-        System.out.println("\n\n");
-        System.out.println("Certificate response: \n" + caString);
-        System.out.println(certificateResponse.getCertificate().getIssuerX500Principal().getName());
-        System.out.println(certificateResponse.getCertificate().getSubjectX500Principal().getName());
-    }
+//    void showCertificateRespond(CertificateResponse certificateResponse) throws Exception {
+//        String caString = new String(certificateResponse.getData(), StandardCharsets.UTF_8);
+//        System.out.println("\n\n");
+//        System.out.println("Certificate response: \n" + caString);
+//        System.out.println(certificateResponse.getCertificate().getIssuerX500Principal().getName());
+//        System.out.println(certificateResponse.getCertificate().getSubjectX500Principal().getName());
+//    }
 
 
     /**
@@ -282,6 +296,7 @@ public class WebServiceConnection {
 
     public RevokeStatus checkRevokation(EjbcaWS ejbcaraws, Certificate cert) {
         try {
+            //Generate x509 Certificate
             X509Certificate x509Cert = (X509Certificate) CertTools
                     .getCertfromByteArray(cert.getRawCertificateData());
             RevokeStatus check = checkRevokationStatus(ejbcaraws, x509Cert.getIssuerDN().toString(), CertTools
@@ -336,6 +351,7 @@ public class WebServiceConnection {
 
     public boolean revokeCertificate(EjbcaWS ejbcaraws, Certificate cert, int reason) throws Exception {
         try {
+            //Generate x509 Certificate
             X509Certificate x509Cert = (X509Certificate) CertTools
                     .getCertfromByteArray(cert.getRawCertificateData());
 

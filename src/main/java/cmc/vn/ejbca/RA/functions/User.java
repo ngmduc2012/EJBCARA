@@ -27,6 +27,7 @@ public class User {
                         EjbcaWS ejbcaraws,
                               UserAPI userAPI
     ) throws Exception {
+        //Check Empty values
         if (userAPI.getUserName().isEmpty()
                 || userAPI.getSubjectDN().isEmpty()
                 || userAPI.getCaName().isEmpty()
@@ -38,6 +39,7 @@ public class User {
             System.out.println("missing one of them");
             return false;
         } else {
+            //Set Value for userDataVOWS
             userDataVOWS.setUsername(userAPI.getUserName());
             userDataVOWS.setPassword(userAPI.getPassword());
             userDataVOWS.setClearPwd(userAPI.isClearPwd());
@@ -50,10 +52,12 @@ public class User {
             userDataVOWS.setEndEntityProfileName(userAPI.getEndEntityProfileName());
             userDataVOWS.setCertificateProfileName(userAPI.getCertificateProfileName());
             userDataVOWS.setStartTime(userAPI.getStartTime());
+            //Add User
             editUser(ejbcaraws, userDataVOWS);
             return true;
         }
     }
+
     public UserDataVOWS setUser(UserDataVOWS userDataVOWS,
                         EjbcaWS ejbcaraws,
                         String userName,
@@ -69,6 +73,7 @@ public class User {
                         String certificateProfileName,
                         String startTime
     ) throws Exception {
+        //Check Empty value
         if (userName.isEmpty()
                 || subjectDN.isEmpty()
                 || CaName.isEmpty()
@@ -78,7 +83,9 @@ public class User {
         ) {
             System.out.println("\n\n");
             System.out.println("missing one of them");
+            return null;
         } else {
+            //Set Value for userDataVOWS
             userDataVOWS.setUsername(userName);
             userDataVOWS.setPassword(password);
             userDataVOWS.setClearPwd(clearPwd);
@@ -109,22 +116,28 @@ public class User {
         }
     }
     public List<UserDataVOWS> findUsers( EjbcaWS ejbcaraws, FindUsers findUsers) throws Exception {
+        //Set User Match
         for ( int i: findUsers.getUsermatch()
              ) {
             userMatch.setMatchwith(i);
         }
+        //Set Value search
         userMatch.setMatchvalue(findUsers.getSearch());
         return findUser(ejbcaraws);
     }
     public UserDataVOWS findUserByUserName( EjbcaWS ejbcaraws, String userName) throws Exception {
+        //Set user match to find by username
         userMatch.setMatchwith(UserMatch.MATCH_WITH_USERNAME);
         userMatch.setMatchvalue(userName);
+        //Find user
         List<UserDataVOWS> listUser = findUser(ejbcaraws);
+        //if list user has one item, return user
         if (listUser.size() == 1) {
             for (UserDataVOWS i :
                     listUser) {
                 return i;
             }
+        //if list has no or more than one, return null
         } else if (listUser.size() == 0) {
             System.out.println("No User for search!");
         } else {
