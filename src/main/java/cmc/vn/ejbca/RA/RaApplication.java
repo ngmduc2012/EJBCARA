@@ -61,6 +61,7 @@ public class RaApplication {
     }
 
 
+    @CrossOrigin(origins = "http://localhost:4200/") //For accept to connect to this url
     /**
      * Get version
      **/
