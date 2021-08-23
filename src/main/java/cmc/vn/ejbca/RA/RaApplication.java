@@ -39,6 +39,9 @@ public class RaApplication {
     // Declare UserDataVOWS of EJBCA
     UserDataVOWS userDataVOWS = new UserDataVOWS();
 
+    //Server connect
+    private static final String ipAddress = "http://localhost:4200/";
+
     public static void main(String[] args) {
         SpringApplication.run(RaApplication.class, args);
     }
@@ -60,11 +63,10 @@ public class RaApplication {
         return ejbcaraws;
     }
 
-
-    @CrossOrigin(origins = "http://localhost:4200/") //For accept to connect to this url
     /**
      * Get version
      **/
+    @CrossOrigin(origins = ipAddress) //For accept to connect to this url
     @GetMapping("/version")
     public Version version() throws Exception {
         return new Version(ejbcaraws().getEjbcaVersion());
@@ -73,6 +75,7 @@ public class RaApplication {
     /**
      * Get end entity
      **/
+    @CrossOrigin(origins = ipAddress) //For accept to connect to this url
     @GetMapping("/endentity")
     public List<EndEntityList> endentity(
     ) throws Exception {
@@ -82,6 +85,7 @@ public class RaApplication {
     /**
      * Get available CA
      **/
+    @CrossOrigin(origins = ipAddress) //For accept to connect to this url
     @GetMapping("/availableCA")
     public List<AvailableCA> availableCA(
     ) throws Exception {
@@ -110,6 +114,7 @@ public class RaApplication {
           "startTime": null
       }
      */
+    @CrossOrigin(origins = ipAddress) //For accept to connect to this url
     @PostMapping("/addUser")
     public ResponseEntity<String> addUser(@RequestBody UserAPI newUserAPI) throws Exception {
         if (user.addOrEditUser(userDataVOWS, ejbcaraws(), newUserAPI)) {
@@ -129,6 +134,7 @@ public class RaApplication {
           "usermatch" : [5]
       }
      */
+    @CrossOrigin(origins = ipAddress) //For accept to connect to this url
     @PostMapping("/findUsers")
     public List<UserDataVOWS> findUsers(@RequestBody FindUsers findUsers) throws Exception {
         return user.findUsers(ejbcaraws(), findUsers);
@@ -146,6 +152,7 @@ public class RaApplication {
           "decision" : true
       }
      */
+    @CrossOrigin(origins = ipAddress) //For accept to connect to this url
     @PostMapping("/deleteUser")
     public ResponseEntity<String> deleteUser(@RequestBody DeleteUser deleteUser) throws Exception {
         if (user.deleteUser(ejbcaraws(), deleteUser)) {
@@ -165,6 +172,7 @@ public class RaApplication {
      * hardTokenSN  : text :
      * responseType : text : CERTIFICATE
      **/
+    @CrossOrigin(origins = ipAddress) //For accept to connect to this url
     @PostMapping(value = "/respondCertificate",
             consumes = {MediaType.MULTIPART_FORM_DATA_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE})
@@ -200,6 +208,7 @@ public class RaApplication {
           "onlyValid" : false
       }
      */
+    @CrossOrigin(origins = ipAddress) //For accept to connect to this url
     @PostMapping("/findCerts")
     public List<Certificate> listCerts(@RequestBody FindCerts findCerts) throws Exception {
         return connection.findCerts(ejbcaraws(), findCerts.getUserName(), findCerts.isOnlyValid());
@@ -219,6 +228,7 @@ public class RaApplication {
           "reason" : 0
       }
      */
+    @CrossOrigin(origins = ipAddress) //For accept to connect to this url
     @PostMapping("/revokeCertificate")
     public ResponseEntity<String> revokeCertificate(@RequestBody RevokeCertificate revoke) throws Exception {
         if (connection.revokeCertificate(
@@ -244,6 +254,7 @@ public class RaApplication {
           "idCert" : 41
       }
      */
+    @CrossOrigin(origins = ipAddress) //For accept to connect to this url
     @PostMapping("/checkRevokation")
     public RevokeStatus checkRevokation(@RequestBody CheckRevokation check) throws Exception {
         return connection.checkRevokation(
@@ -287,6 +298,7 @@ public class RaApplication {
           "keyalg": "RSA"
       }
      **/
+    @CrossOrigin(origins = ipAddress) //For accept to connect to this url
     @PostMapping("/p12Req")
     public KeyStore p12Req(@RequestBody PKCS12ReqAPI pkcs12) throws Exception {
         return connection.pkcs12Req(
@@ -334,6 +346,7 @@ public class RaApplication {
           "keyalg": "RSA"
       }
      */
+    @CrossOrigin(origins = ipAddress) //For accept to connect to this url
     @PostMapping("/certificateFromP12")
     public ResponseEntity<String> certificateFromP12(@RequestBody PKCS12ReqAPI pkcs12) throws Exception {
         java.security.cert.Certificate certificate = connection.certificateFromP12(
@@ -372,6 +385,7 @@ public class RaApplication {
           "keyalg" : "RSA"
       }
      */
+    @CrossOrigin(origins = ipAddress) //For accept to connect to this url
     @PostMapping("/softTokenRequest")
     public KeyStore softTokenRequest(@RequestBody SoftTokenRequest softTokenRequest) throws Exception {
         return connection.softTokenRequest(ejbcaraws(), user.setUser(
@@ -404,6 +418,7 @@ public class RaApplication {
           "keyalgorithmRsa" : "RSA"
       }
      */
+    @CrossOrigin(origins = ipAddress) //For accept to connect to this url
     @PostMapping("/generateKeys")
     public Keys generateKeys(@RequestBody GenerateKeys keys) throws Exception {
         KeyPair keyPair = connection.generateKeys(keys.getKeySpec(), keys.getKeyalgorithmRsa());
@@ -447,6 +462,7 @@ public class RaApplication {
           "dn": "CN=client6, OU=CMC, O=CMC company, L=ha noi, ST=cau giay, C=VN"
       }
      */
+    @CrossOrigin(origins = ipAddress) //For accept to connect to this url
     @PostMapping("/pkcs10CertificationRequest")
     public ResponseEntity<String> pkcs10CertificationRequest(@RequestBody PKCS10Certification pkcs10) throws Exception {
         //Generate Keys
@@ -495,6 +511,7 @@ public class RaApplication {
          "responseType": "CERTIFICATE"
      }
      */
+    @CrossOrigin(origins = ipAddress) //For accept to connect to this url
     @PostMapping("/certificateRequestFromP10")
     public ResponseEntity<String> certificateRequestFromP10(@RequestBody CertificateRequestFromP10 cert) throws Exception {
         //Generate Keys
