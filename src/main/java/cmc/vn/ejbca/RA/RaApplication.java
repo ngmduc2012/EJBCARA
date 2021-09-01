@@ -55,12 +55,11 @@ public class RaApplication {
      **/
     public EjbcaWS ejbcaraws() throws Exception {
         String urlstr = "https://caadmin.cmc.vn:8443/ejbca/ejbcaws/ejbcaws?wsdl";
-        String truststore = "C:\\Users\\ngmdu\\Desktop\\p12\\truststore.jks";
+        String truststore = "src\\p12\\truststore.jks";
         String passTruststore = "123456";
-        String superadmin = "C:\\Users\\ngmdu\\Desktop\\p12\\superadmin.p12";
+        String superadmin = "src\\p12\\superadmin.p12";
         String passSuperadmin = "123456";
-        EjbcaWS ejbcaraws = connection.connectService(urlstr, truststore, passTruststore, superadmin, passSuperadmin);
-        return ejbcaraws;
+        return connection.connectService(urlstr, truststore, passTruststore, superadmin, passSuperadmin);
     }
 
     /**
@@ -116,11 +115,8 @@ public class RaApplication {
      */
     @CrossOrigin(origins = ipAddress) //For accept to connect to this url
     @PostMapping("/addUser")
-    public ResponseEntity<String> addUser(@RequestBody UserAPI newUserAPI) throws Exception {
-        if (user.addOrEditUser(userDataVOWS, ejbcaraws(), newUserAPI)) {
-            return ResponseEntity.ok("Success");
-        }
-        return ResponseEntity.ok("Failure");
+    public Boolean addUser(@RequestBody UserAPI newUserAPI) throws Exception {
+        return user.addOrEditUser(userDataVOWS, ejbcaraws(), newUserAPI);
     }
 
     /**
@@ -154,11 +150,8 @@ public class RaApplication {
      */
     @CrossOrigin(origins = ipAddress) //For accept to connect to this url
     @PostMapping("/deleteUser")
-    public ResponseEntity<String> deleteUser(@RequestBody DeleteUser deleteUser) throws Exception {
-        if (user.deleteUser(ejbcaraws(), deleteUser)) {
-            return ResponseEntity.ok("Success");
-        }
-        return ResponseEntity.ok("Failure");
+    public Boolean deleteUser(@RequestBody DeleteUser deleteUser) throws Exception {
+        return user.deleteUser(ejbcaraws(), deleteUser);
     }
 
 
@@ -176,7 +169,7 @@ public class RaApplication {
     @PostMapping(value = "/respondCertificate",
             consumes = {MediaType.MULTIPART_FORM_DATA_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<String> respondCertificate(
+    public TextRespondHttpClient respondCertificate(
             @RequestBody MultipartFile fileRequest,
             String userName,
             String requestType,
@@ -192,8 +185,7 @@ public class RaApplication {
                 responseType);
 
         //change certificate Respone Data to Base64 string
-        String encoded = Base64.getEncoder().encodeToString(certificateResponse.getData());
-        return ResponseEntity.ok(encoded);
+        return new TextRespondHttpClient(Base64.getEncoder().encodeToString(certificateResponse.getData()));
     }
 
 
@@ -230,15 +222,12 @@ public class RaApplication {
      */
     @CrossOrigin(origins = ipAddress) //For accept to connect to this url
     @PostMapping("/revokeCertificate")
-    public ResponseEntity<String> revokeCertificate(@RequestBody RevokeCertificate revoke) throws Exception {
-        if (connection.revokeCertificate(
+    public Boolean revokeCertificate(@RequestBody RevokeCertificate revoke) throws Exception {
+        return connection.revokeCertificate(
                 ejbcaraws(),
                 // Find the Certificate that want to revoke
                 connection.findCerts(ejbcaraws(), revoke.getUserName(), revoke.isOnlyValid()).get(revoke.getIdCert()),
-                revoke.getReason())) {
-            return ResponseEntity.ok("Success");
-        }
-        return ResponseEntity.ok("Failure");
+                revoke.getReason());
     }
 
 
@@ -348,16 +337,14 @@ public class RaApplication {
      */
     @CrossOrigin(origins = ipAddress) //For accept to connect to this url
     @PostMapping("/certificateFromP12")
-    public ResponseEntity<String> certificateFromP12(@RequestBody PKCS12ReqAPI pkcs12) throws Exception {
+    public TextRespondHttpClient certificateFromP12(@RequestBody PKCS12ReqAPI pkcs12) throws Exception {
         java.security.cert.Certificate certificate = connection.certificateFromP12(
                 // Below is Generation P12 KeyStore Request
                 connection.pkcs12Req(ejbcaraws(), pkcs12.getUsername(), pkcs12.getPassword(), pkcs12.getHardTokenSN(), pkcs12.getKeyspec(), pkcs12.getKeyalg()),
                 "PKCS12",
                 pkcs12.getPassword());
-
         //change certificate Data to Base64 string
-        String encoded = Base64.getEncoder().encodeToString(certificate.getEncoded());
-        return ResponseEntity.ok(encoded);
+        return new TextRespondHttpClient(Base64.getEncoder().encodeToString(certificate.getEncoded()));
     }
 
 
@@ -464,13 +451,12 @@ public class RaApplication {
      */
     @CrossOrigin(origins = ipAddress) //For accept to connect to this url
     @PostMapping("/pkcs10CertificationRequest")
-    public ResponseEntity<String> pkcs10CertificationRequest(@RequestBody PKCS10Certification pkcs10) throws Exception {
+    public TextRespondHttpClient pkcs10CertificationRequest(@RequestBody PKCS10Certification pkcs10) throws Exception {
         //Generate Keys
         KeyPair keys = connection.generateKeys(pkcs10.getKeySpec(), pkcs10.getKeyalgorithmRsa());
 
         //change pkcs10 Certification Request Data to Base64 string
-        String encoded = Base64.getEncoder().encodeToString(client.pkcs10CertificationRequest(pkcs10.getSignatureAlgorithm(), pkcs10.getDn(), keys).getEncoded());
-        return ResponseEntity.ok(encoded);
+        return new TextRespondHttpClient(Base64.getEncoder().encodeToString(client.pkcs10CertificationRequest(pkcs10.getSignatureAlgorithm(), pkcs10.getDn(), keys).getEncoded()));
     }
 
     /**
@@ -513,7 +499,7 @@ public class RaApplication {
      */
     @CrossOrigin(origins = ipAddress) //For accept to connect to this url
     @PostMapping("/certificateRequestFromP10")
-    public ResponseEntity<String> certificateRequestFromP10(@RequestBody CertificateRequestFromP10 cert) throws Exception {
+    public TextRespondHttpClient certificateRequestFromP10(@RequestBody CertificateRequestFromP10 cert) throws Exception {
         //Generate Keys
         KeyPair keys = connection.generateKeys(cert.getKeySpec(), cert.getKeyalgorithmRsa());
 
@@ -530,8 +516,7 @@ public class RaApplication {
                 cert.getResponseType());
 
         //Change Certificate Response data to Base64 sring
-        String encoded = Base64.getEncoder().encodeToString(certenv.getData());
-        return ResponseEntity.ok(encoded);
+        return new TextRespondHttpClient(Base64.getEncoder().encodeToString(certenv.getData()));
     }
 
 }

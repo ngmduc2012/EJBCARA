@@ -149,19 +149,17 @@ public class User {
     /**
      * Revoke User
      **/
-    void revokeUser(EjbcaWS ejbcaraws, String username, int reason, boolean deleteUser)
-            throws Exception {
+    Boolean revokeUser(EjbcaWS ejbcaraws, String username, int reason, boolean deleteUser) {
         try {
             ejbcaraws.revokeUser(username, reason, deleteUser);
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
-
-            throw e;
+            return false;
         }
     }
-    public Boolean deleteUser(EjbcaWS ejbcaraws, DeleteUser deleteUser) throws Exception {
-        revokeUser(ejbcaraws, deleteUser.getUserName(), deleteUser.getReason(), deleteUser.isDecision());
-        return true;
+    public Boolean deleteUser(EjbcaWS ejbcaraws, DeleteUser deleteUser) {
+        return revokeUser(ejbcaraws, deleteUser.getUserName(), deleteUser.getReason(), deleteUser.isDecision());
     }
 
     /**

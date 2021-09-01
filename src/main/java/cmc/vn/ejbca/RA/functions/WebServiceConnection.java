@@ -338,26 +338,26 @@ public class WebServiceConnection {
     /**
      * Revoke Certificate
      **/
-    void revokeCert(EjbcaWS ejbcaraws, String issuerDN, String certificateSN,
-                    int reason) throws Exception {
+    boolean revokeCert(EjbcaWS ejbcaraws, String issuerDN, String certificateSN,
+                    int reason) {
         try {
             ejbcaraws.revokeCert(issuerDN, certificateSN, reason);
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
-
-            throw e;
+            return false;
         }
     }
 
-    public boolean revokeCertificate(EjbcaWS ejbcaraws, Certificate cert, int reason) throws Exception {
+    public boolean revokeCertificate(EjbcaWS ejbcaraws, Certificate cert, int reason){
         try {
             //Generate x509 Certificate
             X509Certificate x509Cert = (X509Certificate) CertTools
                     .getCertfromByteArray(cert.getRawCertificateData());
 
-            revokeCert(ejbcaraws, x509Cert.getIssuerDN().toString(), CertTools
+            return revokeCert(ejbcaraws, x509Cert.getIssuerDN().toString(), CertTools
                     .getSerialNumberAsString(x509Cert), reason);
-            return true;
+
         } catch (Exception e) {
             e.printStackTrace();
             return false;
