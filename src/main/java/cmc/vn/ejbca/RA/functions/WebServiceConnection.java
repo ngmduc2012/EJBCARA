@@ -1,22 +1,32 @@
 package cmc.vn.ejbca.RA.functions;
 
+import cmc.vn.ejbca.RA.RaApplication;
 import cmc.vn.ejbca.RA.api.AvailableCA;
 import cmc.vn.ejbca.RA.api.CAs;
 import cmc.vn.ejbca.RA.api.CPs;
 import cmc.vn.ejbca.RA.api.EndEntityList;
+import cmc.vn.ejbca.RA.response.ResponseObject;
+import cmc.vn.ejbca.RA.response.ResponseStatus;
 import org.bouncycastle.util.encoders.Base64;
 import org.cesecore.keys.util.KeyTools;
 import org.cesecore.util.CertTools;
 import org.cesecore.util.CryptoProviderTools;
 import org.ejbca.core.protocol.ws.client.gen.*;
 import org.ejbca.core.protocol.ws.common.KeyStoreHelper;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
 
 
 import javax.xml.namespace.QName;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.security.KeyPair;
 import java.security.Security;
 import java.security.cert.X509Certificate;
@@ -26,6 +36,11 @@ import java.util.List;
 
 
 public class WebServiceConnection {
+    public String pathFileP12 = "src\\p12\\superadmin.p12";
+    public String pathFileTrustStore = "src\\p12\\truststore.jks";
+    public String passwordP12 = ""; //if upload a wrong P12 password at the first time, we cannot connect with another visit, we have to restart server
+    public String passwordTrustStore = "";
+
 
     /**
      * Connect to Web Server
@@ -33,6 +48,11 @@ public class WebServiceConnection {
      **/
     public EjbcaWS connectService(String urlstr, String truststore, String passTruststore, String superadmin, String passSuperadmin) throws Exception {
         try {
+//            System.out.println("truststore: "+ truststore);
+//            System.out.println("passTruststore: " + passTruststore);
+//            System.out.println("superadmin: " + superadmin);
+//            System.out.println("passSuperadmin: " + passSuperadmin);
+
             CryptoProviderTools.installBCProvider();
             System.setProperty("javax.net.ssl.trustStore", truststore);
             System.setProperty("javax.net.ssl.trustStorePassword", passTruststore);
@@ -46,9 +66,40 @@ public class WebServiceConnection {
         } catch (Exception exc) {
             System.err
                     .println("*** Could not connect to non-authenticated web service");
+            System.out.println(exc);
 
             return null;
         }
+    }
+
+    //write file to path file (address file)
+    private static void writeToFile(byte[] data, String file) throws FileNotFoundException, IOException {
+        try (FileOutputStream out = new FileOutputStream(file)) {
+            out.write(data);
+        }
+    }
+
+    /**
+     * Create connect RA Server to CA Server
+     **/
+    public ResponseObject<?> connectRAtoCAServer(MultipartFile fileP12,
+                                                 String passwordP12,
+                                                 MultipartFile fileTrustStore,
+                                                 String passwordTrustStore) {
+        ResponseObject<?> res = new ResponseObject<>(true, ResponseStatus.DO_SERVICE_SUCCESSFUL);
+
+        try{
+            //save files and passwords to CA server
+            writeToFile(fileTrustStore.getBytes(), pathFileTrustStore);
+            writeToFile(fileP12.getBytes(), pathFileP12);
+            this.passwordP12 = passwordP12;
+            this.passwordTrustStore = passwordTrustStore;
+            res.setData(null);
+        } catch (Exception exception){
+            System.out.println("Cannot save file and password");
+            return new ResponseObject<>(false, ResponseStatus.UNHANDLED_ERROR, exception.getMessage());
+        }
+        return res;
     }
 
 
@@ -65,7 +116,7 @@ public class WebServiceConnection {
             for (NameAndId i : ejbcaraws.getAvailableCAs()
             ) {
                 // add AvailableCA to list
-                availableCAList.add(new AvailableCA(i.getName() , i.getId()));
+                availableCAList.add(new AvailableCA(i.getName(), i.getId()));
             }
         }
         // return list AvailableCA (even null)
@@ -339,7 +390,7 @@ public class WebServiceConnection {
      * Revoke Certificate
      **/
     boolean revokeCert(EjbcaWS ejbcaraws, String issuerDN, String certificateSN,
-                    int reason) {
+                       int reason) {
         try {
             ejbcaraws.revokeCert(issuerDN, certificateSN, reason);
             return true;
@@ -349,7 +400,7 @@ public class WebServiceConnection {
         }
     }
 
-    public boolean revokeCertificate(EjbcaWS ejbcaraws, Certificate cert, int reason){
+    public boolean revokeCertificate(EjbcaWS ejbcaraws, Certificate cert, int reason) {
         try {
             //Generate x509 Certificate
             X509Certificate x509Cert = (X509Certificate) CertTools

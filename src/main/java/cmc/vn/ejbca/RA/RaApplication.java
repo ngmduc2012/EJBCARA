@@ -6,15 +6,14 @@ import cmc.vn.ejbca.RA.api.SoftTokenRequest;
 import cmc.vn.ejbca.RA.functions.User;
 import cmc.vn.ejbca.RA.functions.WebClient;
 import cmc.vn.ejbca.RA.functions.WebServiceConnection;
+import cmc.vn.ejbca.RA.response.ResponseObject;
 import org.bouncycastle.jce.PKCS10CertificationRequest;
-import org.cesecore.certificates.endentity.EndEntityConstants;
-import org.cesecore.certificates.util.AlgorithmConstants;
 import org.ejbca.core.protocol.ws.client.gen.CertificateResponse;
 import org.ejbca.core.protocol.ws.client.gen.EjbcaWS;
 import org.ejbca.core.protocol.ws.client.gen.UserDataVOWS;
-import org.ejbca.core.protocol.ws.common.CertificateHelper;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -42,6 +41,7 @@ public class RaApplication {
     //Server connect
     private static final String ipAddress = "http://localhost:4200/";
 
+
     public static void main(String[] args) {
         SpringApplication.run(RaApplication.class, args);
     }
@@ -55,11 +55,43 @@ public class RaApplication {
      **/
     public EjbcaWS ejbcaraws() throws Exception {
         String urlstr = "https://caadmin.cmc.vn:8443/ejbca/ejbcaws/ejbcaws?wsdl";
-        String truststore = "src\\p12\\truststore.jks";
-        String passTruststore = "123456";
-        String superadmin = "src\\p12\\superadmin.p12";
-        String passSuperadmin = "123456";
-        return connection.connectService(urlstr, truststore, passTruststore, superadmin, passSuperadmin);
+//        System.out.println(".passwordTrustStore: " + connection.passwordTrustStore);
+//        System.out.println(".passwordP12: " + connection.passwordP12);
+//        System.out.println(".pathFileTrustStore: " + connection.pathFileTrustStore);
+//        System.out.println(".pathFileP12: " +  connection.pathFileP12);
+        return connection.connectService(
+                urlstr,
+                connection.pathFileTrustStore,
+                connection.passwordTrustStore,
+                connection.pathFileP12,
+                connection.passwordP12);
+    }
+
+    /**
+     * API for RA server connect to CA server
+     * <p>
+     * Test Postman POST body form-data
+     * fileP12             : file : superadmin.p12
+     * passwordP12         : text : ******
+     * fileTrustStore      : file : truststore.jks
+     * passwordTrustStore  : text : ******
+     **/
+    @CrossOrigin(origins = ipAddress) //For accept to connect to this url
+    @PostMapping(value = "/connect",
+            consumes = {MediaType.MULTIPART_FORM_DATA_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE})
+    public ResponseEntity<?> connect(
+            @RequestBody MultipartFile fileP12, //Transmission file p12: superadmin.p12
+            String passwordP12,//Transmission password for file superadmin.p12
+            @RequestBody MultipartFile fileTrustStore,//Transmission file trustStore: truststore.jks
+            String passwordTrustStore//Transmission password for file truststore.jks
+    ) throws Exception {
+        ResponseObject<?> res = connection.connectRAtoCAServer(
+                fileP12,
+                passwordP12,
+                fileTrustStore,
+                passwordTrustStore);
+        return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
     /**
