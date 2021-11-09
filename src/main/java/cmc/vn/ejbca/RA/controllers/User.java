@@ -1,8 +1,12 @@
-package cmc.vn.ejbca.RA.functions;
+package cmc.vn.ejbca.RA.controllers;
 
-import cmc.vn.ejbca.RA.api.DeleteUser;
-import cmc.vn.ejbca.RA.api.FindUsers;
-import cmc.vn.ejbca.RA.api.UserAPI;
+import cmc.vn.ejbca.RA.responds.DeleteUser;
+import cmc.vn.ejbca.RA.responds.EndEntityList;
+import cmc.vn.ejbca.RA.responds.FindUsers;
+import cmc.vn.ejbca.RA.responds.UserAPI;
+import cmc.vn.ejbca.RA.response.ResponseObject;
+import cmc.vn.ejbca.RA.response.ResponseStatus;
+import org.bouncycastle.its.asn1.EndEntityType;
 import org.ejbca.core.protocol.ws.client.gen.EjbcaWS;
 import org.ejbca.core.protocol.ws.client.gen.UserDataVOWS;
 import org.ejbca.core.protocol.ws.client.gen.UserMatch;
@@ -23,10 +27,10 @@ public class User {
             throw e;
         }
     }
-    public boolean addOrEditUser(UserDataVOWS userDataVOWS,
-                        EjbcaWS ejbcaraws,
-                              UserAPI userAPI
-    ) throws Exception {
+
+    public ResponseObject<Boolean> addOrEditUser(UserDataVOWS userDataVOWS, EjbcaWS ejbcaraws, UserAPI userAPI) throws Exception {
+
+        ResponseObject<Boolean> res = new ResponseObject<>(true, ResponseStatus.DO_SERVICE_SUCCESSFUL);
         //Check Empty values
         if (userAPI.getUserName().isEmpty()
                 || userAPI.getSubjectDN().isEmpty()
@@ -37,41 +41,46 @@ public class User {
         ) {
             System.out.println("\n\n");
             System.out.println("missing one of them");
-            return false;
+            res.setData(false);
         } else {
-            //Set Value for userDataVOWS
-            userDataVOWS.setUsername(userAPI.getUserName());
-            userDataVOWS.setPassword(userAPI.getPassword());
-            userDataVOWS.setClearPwd(userAPI.isClearPwd());
-            userDataVOWS.setSubjectDN(userAPI.getSubjectDN());
-            userDataVOWS.setCaName(userAPI.getCaName());
-            userDataVOWS.setTokenType(userAPI.getTokenType());
-            userDataVOWS.setStatus(userAPI.getStatus());
-            userDataVOWS.setEmail(userAPI.getEmail());
-            userDataVOWS.setSubjectAltName(userAPI.getSubjectAltName());
-            userDataVOWS.setEndEntityProfileName(userAPI.getEndEntityProfileName());
-            userDataVOWS.setCertificateProfileName(userAPI.getCertificateProfileName());
-            userDataVOWS.setStartTime(userAPI.getStartTime());
-            //Add User
-            editUser(ejbcaraws, userDataVOWS);
-            return true;
+            try {
+                //Set Value for userDataVOWS
+                userDataVOWS.setUsername(userAPI.getUserName());
+                userDataVOWS.setPassword(userAPI.getPassword());
+                userDataVOWS.setClearPwd(userAPI.isClearPwd());
+                userDataVOWS.setSubjectDN(userAPI.getSubjectDN());
+                userDataVOWS.setCaName(userAPI.getCaName());
+                userDataVOWS.setTokenType(userAPI.getTokenType());
+                userDataVOWS.setStatus(userAPI.getStatus());
+                userDataVOWS.setEmail(userAPI.getEmail());
+                userDataVOWS.setSubjectAltName(userAPI.getSubjectAltName());
+                userDataVOWS.setEndEntityProfileName(userAPI.getEndEntityProfileName());
+                userDataVOWS.setCertificateProfileName(userAPI.getCertificateProfileName());
+                userDataVOWS.setStartTime(userAPI.getStartTime());
+                //Add User
+                editUser(ejbcaraws, userDataVOWS);
+            } catch (Exception e) {
+                return new ResponseObject<>(false, ResponseStatus.UNHANDLED_ERROR, e.getMessage());
+            }
+            res.setData(true);
         }
+        return res;
     }
 
     public UserDataVOWS setUser(UserDataVOWS userDataVOWS,
-                        EjbcaWS ejbcaraws,
-                        String userName,
-                        String password,
-                        boolean clearPwd,
-                        String subjectDN,
-                        String CaName,
-                        String tokenType,
-                        int status,
-                        String email,
-                        String subjectAltName,
-                        String endEntityProfileName,
-                        String certificateProfileName,
-                        String startTime
+                                EjbcaWS ejbcaraws,
+                                String userName,
+                                String password,
+                                boolean clearPwd,
+                                String subjectDN,
+                                String CaName,
+                                String tokenType,
+                                int status,
+                                String email,
+                                String subjectAltName,
+                                String endEntityProfileName,
+                                String certificateProfileName,
+                                String startTime
     ) throws Exception {
         //Check Empty value
         if (userName.isEmpty()
@@ -106,6 +115,7 @@ public class User {
      * Find User
      **/
     UserMatch userMatch = new UserMatch();
+
     List<UserDataVOWS> findUser(EjbcaWS ejbcaraws) throws Exception {
         try {
             return ejbcaraws.findUser(userMatch);
@@ -115,17 +125,27 @@ public class User {
             throw e;
         }
     }
-    public List<UserDataVOWS> findUsers( EjbcaWS ejbcaraws, FindUsers findUsers) throws Exception {
+
+    public ResponseObject<List<UserDataVOWS>> findUsers(EjbcaWS ejbcaraws, FindUsers findUsers) throws Exception {
+
+        ResponseObject<List<UserDataVOWS>> res = new ResponseObject<>(true, ResponseStatus.DO_SERVICE_SUCCESSFUL);
+
         //Set User Match
-        for ( int i: findUsers.getUsermatch()
-             ) {
+        for (int i : findUsers.getUsermatch()
+        ) {
             userMatch.setMatchwith(i);
         }
         //Set Value search
         userMatch.setMatchvalue(findUsers.getSearch());
-        return findUser(ejbcaraws);
+        try {
+            res.setData(findUser(ejbcaraws));
+        } catch (Exception e) {
+            return new ResponseObject<>(false, ResponseStatus.UNHANDLED_ERROR, e.getMessage());
+        }
+        return res;
     }
-    public UserDataVOWS findUserByUserName( EjbcaWS ejbcaraws, String userName) throws Exception {
+
+    public UserDataVOWS findUserByUserName(EjbcaWS ejbcaraws, String userName) throws Exception {
         //Set user match to find by username
         userMatch.setMatchwith(UserMatch.MATCH_WITH_USERNAME);
         userMatch.setMatchvalue(userName);
@@ -137,7 +157,7 @@ public class User {
                     listUser) {
                 return i;
             }
-        //if list has no or more than one, return null
+            //if list has no or more than one, return null
         } else if (listUser.size() == 0) {
             System.out.println("No User for search!");
         } else {
@@ -158,8 +178,21 @@ public class User {
             return false;
         }
     }
-    public Boolean deleteUser(EjbcaWS ejbcaraws, DeleteUser deleteUser) {
-        return revokeUser(ejbcaraws, deleteUser.getUserName(), deleteUser.getReason(), deleteUser.isDecision());
+
+    public ResponseObject<Boolean> revokeUserService(EjbcaWS ejbcaraws, DeleteUser deleteUser) {
+        ResponseObject<Boolean> res = new ResponseObject<>(true, ResponseStatus.DO_SERVICE_SUCCESSFUL);
+
+        try {
+            res.setData(
+                    revokeUser(
+                            ejbcaraws,
+                            deleteUser.getUserName(),
+                            deleteUser.getReason(),
+                            deleteUser.isDecision()));
+        } catch (Exception e) {
+            return new ResponseObject<>(false, ResponseStatus.UNHANDLED_ERROR, e.getMessage());
+        }
+        return res;
     }
 
     /**

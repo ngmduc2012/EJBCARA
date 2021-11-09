@@ -1,6 +1,9 @@
-package cmc.vn.ejbca.RA.api;
+package cmc.vn.ejbca.RA.responds;
 
-public class SoftTokenRequest {
+import javax.persistence.Entity;
+
+@Entity
+public class UserAPI {
 
     private String userName;
     private String password;
@@ -14,11 +17,8 @@ public class SoftTokenRequest {
     private String endEntityProfileName;
     private String certificateProfileName;
     private String startTime;
-    private String hardTokenS;
-    private String keyspec;
-    private String keyalg;
 
-    public SoftTokenRequest(String userName, String password, boolean clearPwd, String subjectDN, String CaName, String tokenType, int status, String email, String subjectAltName, String endEntityProfileName, String certificateProfileName, String startTime, String hardTokenS, String keyspec, String keyalg) {
+    public UserAPI(String userName, String password, boolean clearPwd, String subjectDN, String CaName, String tokenType, int status, String email, String subjectAltName, String endEntityProfileName, String certificateProfileName, String startTime) {
         this.userName = userName;
         this.password = password;
         this.clearPwd = clearPwd;
@@ -31,9 +31,6 @@ public class SoftTokenRequest {
         this.endEntityProfileName = endEntityProfileName;
         this.certificateProfileName = certificateProfileName;
         this.startTime = startTime;
-        this.hardTokenS = hardTokenS;
-        this.keyspec = keyspec;
-        this.keyalg = keyalg;
     }
 
     public String getUserName() {
@@ -82,17 +79,5 @@ public class SoftTokenRequest {
 
     public String getStartTime() {
         return startTime;
-    }
-
-    public String getHardTokenS() {
-        return hardTokenS;
-    }
-
-    public String getKeyspec() {
-        return keyspec;
-    }
-
-    public String getKeyalg() {
-        return keyalg;
     }
 }

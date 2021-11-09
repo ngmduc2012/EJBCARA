@@ -1,18 +1,20 @@
 package cmc.vn.ejbca.RA;
 
-import cmc.vn.ejbca.RA.api.*;
-import cmc.vn.ejbca.RA.api.FindCerts;
-import cmc.vn.ejbca.RA.api.SoftTokenRequest;
-import cmc.vn.ejbca.RA.functions.User;
-import cmc.vn.ejbca.RA.functions.WebClient;
-import cmc.vn.ejbca.RA.functions.WebServiceConnection;
+import cmc.vn.ejbca.RA.responds.*;
+import cmc.vn.ejbca.RA.responds.FindCerts;
+import cmc.vn.ejbca.RA.responds.SoftTokenRequest;
+import cmc.vn.ejbca.RA.controllers.User;
+import cmc.vn.ejbca.RA.controllers.WebClient;
+import cmc.vn.ejbca.RA.controllers.WebServiceConnection;
 import cmc.vn.ejbca.RA.response.ResponseObject;
+import cmc.vn.ejbca.RA.response.ResponseStatus;
 import org.bouncycastle.jce.PKCS10CertificationRequest;
 import org.ejbca.core.protocol.ws.client.gen.CertificateResponse;
 import org.ejbca.core.protocol.ws.client.gen.EjbcaWS;
 import org.ejbca.core.protocol.ws.client.gen.UserDataVOWS;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.ejbca.core.protocol.ws.client.gen.*;
 
+import java.math.BigInteger;
 import java.security.KeyPair;
 import java.util.Base64;
 import java.util.List;
@@ -41,6 +44,7 @@ public class RaApplication {
     //Server connect
     private static final String ipAddress = "http://localhost:4200/";
 
+    EjbcaWS ejbcaWS = null;
 
     public static void main(String[] args) {
         SpringApplication.run(RaApplication.class, args);
@@ -53,12 +57,12 @@ public class RaApplication {
      * Select trustsstore.jks & superadmin.p12
      * Follow: https://download.primekey.com/docs/EJBCA-Enterprise/6_15_2/Web_Service_Interface.html
      **/
+    public EjbcaWS connectEJBCA(EjbcaWS ejbcaWS) {
+        this.ejbcaWS = ejbcaWS;
+        return this.ejbcaWS;
+    }
     public EjbcaWS ejbcaraws() throws Exception {
         String urlstr = "https://caadmin.cmc.vn:8443/ejbca/ejbcaws/ejbcaws?wsdl";
-//        System.out.println(".passwordTrustStore: " + connection.passwordTrustStore);
-//        System.out.println(".passwordP12: " + connection.passwordP12);
-//        System.out.println(".pathFileTrustStore: " + connection.pathFileTrustStore);
-//        System.out.println(".pathFileP12: " +  connection.pathFileP12);
         return connection.connectService(
                 urlstr,
                 connection.pathFileTrustStore,
@@ -86,11 +90,39 @@ public class RaApplication {
             @RequestBody MultipartFile fileTrustStore,//Transmission file trustStore: truststore.jks
             String passwordTrustStore//Transmission password for file truststore.jks
     ) throws Exception {
-        ResponseObject<?> res = connection.connectRAtoCAServer(
+        ResponseObject<?> res;
+        ResponseObject<?> saveFile = connection.connectRAtoCAServer(
                 fileP12,
                 passwordP12,
                 fileTrustStore,
                 passwordTrustStore);
+        if (saveFile.getResult()) {
+            try {
+                connectEJBCA(ejbcaraws());
+                res = connection.getAvailableCA(ejbcaWS);
+            } catch (Exception e) {
+                res = new ResponseObject<>(false, ResponseStatus.UNHANDLED_ERROR, e.getMessage());
+            }
+
+        } else {
+            res = saveFile;
+        }
+        return new ResponseEntity<>(res, HttpStatus.OK);
+    }
+
+    /**
+     * API for RA server connect to CA server
+     * <p>
+     * Test Postman POST body form-data
+     * fileP12             : file : superadmin.p12
+     * passwordP12         : text : ******
+     * fileTrustStore      : file : truststore.jks
+     * passwordTrustStore  : text : ******
+     **/
+    @CrossOrigin(origins = ipAddress) //For accept to connect to this url
+    @GetMapping(value = "/disconnect")
+    public ResponseEntity<?> disconnect() throws Exception {
+        ResponseObject<?> res = connection.disConnectRAtoCAServer();
         return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
@@ -99,8 +131,14 @@ public class RaApplication {
      **/
     @CrossOrigin(origins = ipAddress) //For accept to connect to this url
     @GetMapping("/version")
-    public Version version() throws Exception {
-        return new Version(ejbcaraws().getEjbcaVersion());
+    public ResponseEntity<?> version() throws Exception {
+        ResponseObject<Version> res = new ResponseObject<>(true, ResponseStatus.DO_SERVICE_SUCCESSFUL);
+        try {
+            res.setData(new Version(ejbcaWS.getEjbcaVersion()));
+        } catch (Exception e) {
+            res = new ResponseObject<>(false, ResponseStatus.UNHANDLED_ERROR, e.getMessage());
+        }
+        return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
     /**
@@ -108,9 +146,23 @@ public class RaApplication {
      **/
     @CrossOrigin(origins = ipAddress) //For accept to connect to this url
     @GetMapping("/endentity")
-    public List<EndEntityList> endentity(
+    public ResponseEntity<?> endentity(
     ) throws Exception {
-        return connection.getEndEntity(ejbcaraws());
+        ResponseObject<?> res =  connection.getEndEntity(ejbcaWS);
+        return new ResponseEntity<>(res, HttpStatus.OK);
+    }
+
+    /**
+     * Get profile By Id
+     **/
+    @CrossOrigin(origins = ipAddress) //For accept to connect to this url
+    @GetMapping("/profile")
+    public ResponseEntity<?> profileById(
+            @RequestParam String id,
+            @RequestParam(defaultValue = "cp") String type
+    ) throws Exception {
+        ResponseObject<?> res =  connection.getProfileById(ejbcaWS, id, type);
+        return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
     /**
@@ -118,9 +170,10 @@ public class RaApplication {
      **/
     @CrossOrigin(origins = ipAddress) //For accept to connect to this url
     @GetMapping("/availableCA")
-    public List<AvailableCA> availableCA(
+    public ResponseEntity<?> availableCA(
     ) throws Exception {
-        return connection.getAvailableCA(ejbcaraws());
+        ResponseObject<?> res = connection.getAvailableCA(ejbcaWS);
+        return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
 
@@ -146,15 +199,59 @@ public class RaApplication {
       }
      */
     @CrossOrigin(origins = ipAddress) //For accept to connect to this url
-    @PostMapping("/addUser")
-    public Boolean addUser(@RequestBody UserAPI newUserAPI) throws Exception {
-        return user.addOrEditUser(userDataVOWS, ejbcaraws(), newUserAPI);
+    @PostMapping("/addOrEditUser")
+    public ResponseEntity<?> addOrEditUser(@RequestBody UserAPI newUserAPI) throws Exception {
+        ResponseObject<?> res = user.addOrEditUser(userDataVOWS, ejbcaWS, newUserAPI);
+        return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
     /**
      * Find users
      * <p>
      * Test Posman POST body raw JSON
+     *
+     * MATCH_WITH_USERNAME = 0;
+     * MATCH_WITH_EMAIL = 1;
+     * MATCH_WITH_STATUS = 2;
+     * MATCH_WITH_ENDENTITYPROFILE = 3;
+     * MATCH_WITH_CERTIFICATEPROFILE = 4;
+     * MATCH_WITH_CA = 5;
+     * MATCH_WITH_TOKEN = 6;
+     * MATCH_WITH_DN = 7;
+     * MATCH_WITH_UID = 100;
+     * MATCH_WITH_COMMONNAME = 101;
+     * MATCH_WITH_DNSERIALNUMBER = 102;
+     * MATCH_WITH_GIVENNAME = 103;
+     * MATCH_WITH_INITIALS = 104;
+     * MATCH_WITH_SURNAME = 105;
+     * MATCH_WITH_TITLE = 106;
+     * MATCH_WITH_ORGANIZATIONALUNIT = 107;
+     * MATCH_WITH_ORGANIZATION = 108;
+     * MATCH_WITH_LOCALITY = 109;
+     * MATCH_WITH_STATEORPROVINCE = 110;
+     * MATCH_WITH_DOMAINCOMPONENT = 111;
+     * MATCH_WITH_COUNTRY = 112;
+     * MATCH_TYPE_EQUALS = 0;
+     * MATCH_TYPE_BEGINSWITH = 1;
+     * MATCH_TYPE_CONTAINS = 2;
+     *
+     *
+     * Get status of User after get data
+     * (Example: EndEntityConstants.STATUS_NEW)
+     * STATUS_NEW = 10;            New user
+     * STATUS_FAILED = 11;         Generation of user certificate failed
+     * STATUS_INITIALIZED = 20;    User has been initialized
+     * STATUS_INPROCESS = 30;      Generation of user certificate in process
+     * STATUS_GENERATED = 40;      A certificate has been generated for the user
+     * STATUS_REVOKED = 50;        The user has been revoked and should not have any more certificates issued
+     * STATUS_HISTORICAL = 60;     The user is old and archived
+     * STATUS_KEYRECOVERY  = 70;   The user is should use key recovery functions in next certificate generation.
+     *
+     *
+     * TOKEN_TYPE_USERGENERATED = "USERGENERATED";
+     * TOKEN_TYPE_JKS = "JKS";
+     * TOKEN_TYPE_PEM = "PEM";
+     * TOKEN_TYPE_P12 = "P12";
      */
     /*
       {
@@ -164,8 +261,9 @@ public class RaApplication {
      */
     @CrossOrigin(origins = ipAddress) //For accept to connect to this url
     @PostMapping("/findUsers")
-    public List<UserDataVOWS> findUsers(@RequestBody FindUsers findUsers) throws Exception {
-        return user.findUsers(ejbcaraws(), findUsers);
+    public ResponseEntity<?> findUsers(@RequestBody FindUsers findUsers) throws Exception {
+        ResponseObject<?> res = user.findUsers(ejbcaWS, findUsers);
+        return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
     /**
@@ -181,9 +279,10 @@ public class RaApplication {
       }
      */
     @CrossOrigin(origins = ipAddress) //For accept to connect to this url
-    @PostMapping("/deleteUser")
-    public Boolean deleteUser(@RequestBody DeleteUser deleteUser) throws Exception {
-        return user.deleteUser(ejbcaraws(), deleteUser);
+    @PostMapping("/revokeUser")
+    public ResponseEntity<?> revokeUserService(@RequestBody DeleteUser deleteUser) throws Exception {
+        ResponseObject<?> res = user.revokeUserService(ejbcaWS, deleteUser);
+        return new ResponseEntity<>(res, HttpStatus.OK);
     }
 
 
@@ -209,9 +308,9 @@ public class RaApplication {
             String responseType
     ) throws Exception {
         CertificateResponse certificateResponse = connection.certificateRequestFromFile(
-                ejbcaraws(),
+                ejbcaWS,
                 fileRequest,
-                user.findUserByUserName(ejbcaraws(), userName), //Find the user
+                user.findUserByUserName(ejbcaWS, userName), //Find the user
                 Integer.parseInt(requestType),
                 hardTokenSN,
                 responseType);
@@ -235,7 +334,7 @@ public class RaApplication {
     @CrossOrigin(origins = ipAddress) //For accept to connect to this url
     @PostMapping("/findCerts")
     public List<Certificate> listCerts(@RequestBody FindCerts findCerts) throws Exception {
-        return connection.findCerts(ejbcaraws(), findCerts.getUserName(), findCerts.isOnlyValid());
+        return connection.findCerts(ejbcaWS, findCerts.getUserName(), findCerts.isOnlyValid());
     }
 
 
@@ -256,9 +355,9 @@ public class RaApplication {
     @PostMapping("/revokeCertificate")
     public Boolean revokeCertificate(@RequestBody RevokeCertificate revoke) throws Exception {
         return connection.revokeCertificate(
-                ejbcaraws(),
+                ejbcaWS,
                 // Find the Certificate that want to revoke
-                connection.findCerts(ejbcaraws(), revoke.getUserName(), revoke.isOnlyValid()).get(revoke.getIdCert()),
+                connection.findCerts(ejbcaWS, revoke.getUserName(), revoke.isOnlyValid()).get(revoke.getIdCert()),
                 revoke.getReason());
     }
 
@@ -279,8 +378,8 @@ public class RaApplication {
     @PostMapping("/checkRevokation")
     public RevokeStatus checkRevokation(@RequestBody CheckRevokation check) throws Exception {
         return connection.checkRevokation(
-                ejbcaraws(),
-                connection.findCerts(ejbcaraws(), check.getUserName(), check.isOnlyValid()).get(check.getIdCert()));
+                ejbcaWS,
+                connection.findCerts(ejbcaWS, check.getUserName(), check.isOnlyValid()).get(check.getIdCert()));
     }
 
     /**
@@ -323,7 +422,7 @@ public class RaApplication {
     @PostMapping("/p12Req")
     public KeyStore p12Req(@RequestBody PKCS12ReqAPI pkcs12) throws Exception {
         return connection.pkcs12Req(
-                ejbcaraws(),
+                ejbcaWS,
                 pkcs12.getUsername(),
                 pkcs12.getPassword(),
                 pkcs12.getHardTokenSN(),
@@ -372,7 +471,7 @@ public class RaApplication {
     public TextRespondHttpClient certificateFromP12(@RequestBody PKCS12ReqAPI pkcs12) throws Exception {
         java.security.cert.Certificate certificate = connection.certificateFromP12(
                 // Below is Generation P12 KeyStore Request
-                connection.pkcs12Req(ejbcaraws(), pkcs12.getUsername(), pkcs12.getPassword(), pkcs12.getHardTokenSN(), pkcs12.getKeyspec(), pkcs12.getKeyalg()),
+                connection.pkcs12Req(ejbcaWS, pkcs12.getUsername(), pkcs12.getPassword(), pkcs12.getHardTokenSN(), pkcs12.getKeyspec(), pkcs12.getKeyalg()),
                 "PKCS12",
                 pkcs12.getPassword());
         //change certificate Data to Base64 string
@@ -407,9 +506,9 @@ public class RaApplication {
     @CrossOrigin(origins = ipAddress) //For accept to connect to this url
     @PostMapping("/softTokenRequest")
     public KeyStore softTokenRequest(@RequestBody SoftTokenRequest softTokenRequest) throws Exception {
-        return connection.softTokenRequest(ejbcaraws(), user.setUser(
+        return connection.softTokenRequest(ejbcaWS, user.setUser(
                 userDataVOWS,
-                ejbcaraws(),
+                ejbcaWS,
                 softTokenRequest.getUserName(),
                 softTokenRequest.getPassword(),
                 softTokenRequest.isClearPwd(),
@@ -540,7 +639,7 @@ public class RaApplication {
 
         //Generate Certificate Response
         CertificateResponse certenv = connection.certificateRequestFromP10(
-                ejbcaraws(),
+                ejbcaWS,
                 pkcs10Cert,
                 cert.getUserName(),
                 cert.getPassword(),

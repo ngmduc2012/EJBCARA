@@ -1,15 +1,12 @@
-package cmc.vn.ejbca.RA.api;
+package cmc.vn.ejbca.RA.responds;
 
-public class CheckRevokation {
-
+public class FindCerts {
     String userName;
     boolean onlyValid;
-    int idCert;
 
-    public CheckRevokation(String userName, boolean onlyValid, int idCert) {
+    public FindCerts(String userName, boolean onlyValid) {
         this.userName = userName;
         this.onlyValid = onlyValid;
-        this.idCert = idCert;
     }
 
     public String getUserName() {
@@ -18,9 +15,5 @@ public class CheckRevokation {
 
     public boolean isOnlyValid() {
         return onlyValid;
-    }
-
-    public int getIdCert() {
-        return idCert;
     }
 }

@@ -1,10 +1,6 @@
-package cmc.vn.ejbca.RA.functions;
+package cmc.vn.ejbca.RA.controllers;
 
-import cmc.vn.ejbca.RA.RaApplication;
-import cmc.vn.ejbca.RA.api.AvailableCA;
-import cmc.vn.ejbca.RA.api.CAs;
-import cmc.vn.ejbca.RA.api.CPs;
-import cmc.vn.ejbca.RA.api.EndEntityList;
+import cmc.vn.ejbca.RA.responds.*;
 import cmc.vn.ejbca.RA.response.ResponseObject;
 import cmc.vn.ejbca.RA.response.ResponseStatus;
 import org.bouncycastle.util.encoders.Base64;
@@ -13,20 +9,20 @@ import org.cesecore.util.CertTools;
 import org.cesecore.util.CryptoProviderTools;
 import org.ejbca.core.protocol.ws.client.gen.*;
 import org.ejbca.core.protocol.ws.common.KeyStoreHelper;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.hibernate.internal.util.xml.XmlDocument;
 import org.springframework.web.multipart.MultipartFile;
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
 
 
 import javax.xml.namespace.QName;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.beans.XMLDecoder;
+import java.io.*;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.security.KeyPair;
 import java.security.Security;
 import java.security.cert.X509Certificate;
@@ -79,6 +75,12 @@ public class WebServiceConnection {
         }
     }
 
+    //Delete file with path file
+    private static boolean deleteToFile(String file) {
+        File path = new File(file);
+        return path.delete();
+    }
+
     /**
      * Create connect RA Server to CA Server
      **/
@@ -88,17 +90,32 @@ public class WebServiceConnection {
                                                  String passwordTrustStore) {
         ResponseObject<?> res = new ResponseObject<>(true, ResponseStatus.DO_SERVICE_SUCCESSFUL);
 
-        try{
+        try {
             //save files and passwords to CA server
             writeToFile(fileTrustStore.getBytes(), pathFileTrustStore);
             writeToFile(fileP12.getBytes(), pathFileP12);
             this.passwordP12 = passwordP12;
             this.passwordTrustStore = passwordTrustStore;
-            res.setData(null);
-        } catch (Exception exception){
+        } catch (Exception exception) {
             System.out.println("Cannot save file and password");
             return new ResponseObject<>(false, ResponseStatus.UNHANDLED_ERROR, exception.getMessage());
         }
+        return res;
+    }
+
+    /**
+     * Create connect RA Server to CA Server
+     **/
+    public ResponseObject<?> disConnectRAtoCAServer() {
+        ResponseObject<Boolean> res = new ResponseObject<>(true, ResponseStatus.DO_SERVICE_SUCCESSFUL);
+
+        this.passwordP12 = "";
+        this.passwordTrustStore = "";
+        if (deleteToFile(pathFileTrustStore) && deleteToFile(pathFileP12)) {
+            res.setData(true);
+            return res;
+        }
+        res.setData(false);
         return res;
     }
 
@@ -106,48 +123,94 @@ public class WebServiceConnection {
     /**
      * Get Available CAs
      **/
-    public List<AvailableCA> getAvailableCA(EjbcaWS ejbcaraws) throws Exception {
+    public ResponseObject<List<AvailableCA>> getAvailableCA(EjbcaWS ejbcaraws) throws Exception {
+        ResponseObject<List<AvailableCA>> res = new ResponseObject<>(true, ResponseStatus.DO_SERVICE_SUCCESSFUL);
+
         List<AvailableCA> availableCAList = new ArrayList<AvailableCA>();
         System.out.println("\n\n");
         // if no AvailableCA be getted
         if (ejbcaraws.getAvailableCAs().isEmpty()) {
             System.out.println("No Available CAs");
+            res.setData(null);
         } else {
-            for (NameAndId i : ejbcaraws.getAvailableCAs()
-            ) {
-                // add AvailableCA to list
-                availableCAList.add(new AvailableCA(i.getName(), i.getId()));
+            try {
+                for (NameAndId i : ejbcaraws.getAvailableCAs()
+                ) {
+                    // add AvailableCA to list
+                    availableCAList.add(new AvailableCA(i.getName(), i.getId()));
+                }
+                res.setData(availableCAList);
+            } catch (Exception e) {
+                return new ResponseObject<>(false, ResponseStatus.UNHANDLED_ERROR, e.getMessage());
             }
         }
         // return list AvailableCA (even null)
-        return availableCAList;
+        return res;
+    }
+
+    public Object objectFromXML(byte[] data) {
+        XMLDecoder d = new XMLDecoder(new BufferedInputStream(new ByteArrayInputStream(data)));
+        Object result = d.readObject();
+        d.close();
+        return result;
+    }
+
+    /**
+     * Get Profile By Id
+     **/
+    public ResponseObject<Object> getProfileById(EjbcaWS ejbcaraws, String idString, String type) throws Exception {
+        ResponseObject<Object> res = new ResponseObject<>(true, ResponseStatus.DO_SERVICE_SUCCESSFUL);
+
+        try {
+
+//            System.out.println(objectFromXML(ejbcaraws.getProfile(1052712113, "cp")));
+//            System.out.println(objectFromXML(ejbcaraws.getProfile(1078345796, "cp")));
+//            System.out.println(objectFromXML(ejbcaraws.getProfile(787145346, "eep")));
+
+            int idInt = Integer.parseInt(idString);
+            //cp for get certificate profile
+            //eep for get end entity profile
+            res.setData(objectFromXML(ejbcaraws.getProfile(idInt, type)));
+        } catch (Exception e) {
+            return new ResponseObject<>(false, ResponseStatus.UNHANDLED_ERROR, e.getMessage());
+        }
+        //return list End Entity (even null)
+        return res;
     }
 
     /**
      * Get End Entity Profile
      **/
-    public List<EndEntityList> getEndEntity(EjbcaWS ejbcaraws) throws Exception {
+    public ResponseObject<List<EndEntityList>> getEndEntity(EjbcaWS ejbcaraws) throws Exception {
+        ResponseObject<List<EndEntityList>> res = new ResponseObject<>(true, ResponseStatus.DO_SERVICE_SUCCESSFUL);
+
         System.out.println("\n\n");
         List<EndEntityList> endEntityList = new ArrayList<EndEntityList>();
         // if get no Authorized End Entity Profiles
         if (ejbcaraws.getAuthorizedEndEntityProfiles().isEmpty()) {
             System.out.println("No End Entity Profile");
+            res.setData(null);
         } else {
-            for (NameAndId i : ejbcaraws.getAuthorizedEndEntityProfiles()
-            ) {
-                // add list
-                endEntityList.add(new EndEntityList(
-                        i.getName(), //name
-                        i.getId(),   //id
-                        availableCA(ejbcaraws.getAvailableCertificateProfiles(i.getId())), //list Certificate Profiles
-                        availableCP(ejbcaraws.getAvailableCertificateProfiles(i.getId()))  //list CAs Profiles
-                ));
+            try {
+                for (NameAndId i : ejbcaraws.getAuthorizedEndEntityProfiles()
+                ) {
+                    // add list
+                    endEntityList.add(new EndEntityList(
+                            i.getName(), //name
+                            i.getId(),   //id
+                            availableCA(ejbcaraws.getAvailableCAsInProfile(i.getId())), //list Certificate Profiles
+                            availableCP(ejbcaraws.getAvailableCertificateProfiles(i.getId()))  //list CAs Profiles
+                    ));
 
+                }
+                res.setData(endEntityList);
+            } catch (Exception e) {
+                return new ResponseObject<>(false, ResponseStatus.UNHANDLED_ERROR, e.getMessage());
             }
 
         }
         //return list End Entity (even null)
-        return endEntityList;
+        return res;
     }
 
     public List<CPs> availableCP(List<NameAndId> available) {

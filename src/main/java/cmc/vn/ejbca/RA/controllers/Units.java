@@ -1,9 +1,8 @@
-package cmc.vn.ejbca.RA.functions;
+package cmc.vn.ejbca.RA.controllers;
 
 
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;
 import org.bouncycastle.openssl.PEMParser;
-import org.springframework.context.annotation.Import;
 
 import java.io.*;
 import java.security.Security;

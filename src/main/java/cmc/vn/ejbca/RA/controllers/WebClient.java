@@ -1,4 +1,4 @@
-package cmc.vn.ejbca.RA.functions;
+package cmc.vn.ejbca.RA.controllers;
 
 import org.bouncycastle.asn1.DERSet;
 import org.bouncycastle.asn1.x509.X509Name;

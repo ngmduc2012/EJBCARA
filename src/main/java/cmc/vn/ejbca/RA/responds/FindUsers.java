@@ -1,4 +1,4 @@
-package cmc.vn.ejbca.RA.api;
+package cmc.vn.ejbca.RA.responds;
 
 import java.util.List;
 
