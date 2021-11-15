@@ -1,4 +1,4 @@
-package cmc.vn.ejbca.RA.controllers;
+package cmc.vn.ejbca.RA.util;
 
 
 import org.bouncycastle.pkcs.PKCS10CertificationRequest;

@@ -1,13 +1,13 @@
-package cmc.vn.ejbca.RA.responds;
+package cmc.vn.ejbca.RA.dto.request;
 
-public class RevokeCertificate {
+public class RequestOfRevokeCertificateDto {
 
     String userName;
     boolean onlyValid;
     int idCert;
     int reason;
 
-    public RevokeCertificate(String userName, boolean onlyValid, int idCert, int reason) {
+    public RequestOfRevokeCertificateDto(String userName, boolean onlyValid, int idCert, int reason) {
         this.userName = userName;
         this.onlyValid = onlyValid;
         this.idCert = idCert;

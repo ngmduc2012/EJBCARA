@@ -1,10 +1,10 @@
-package cmc.vn.ejbca.RA.responds;
+package cmc.vn.ejbca.RA.dto.respond;
 
-public class CPs {
+public class CPsDto {
     String nameCP;
     int idCP;
 
-    public CPs(String nameCP, int idCP) {
+    public CPsDto(String nameCP, int idCP) {
         this.nameCP = nameCP;
         this.idCP = idCP;
     }

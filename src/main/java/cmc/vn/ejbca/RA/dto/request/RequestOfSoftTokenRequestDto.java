@@ -1,6 +1,6 @@
-package cmc.vn.ejbca.RA.responds;
+package cmc.vn.ejbca.RA.dto.request;
 
-public class SoftTokenRequest {
+public class RequestOfSoftTokenRequestDto {
 
     private String userName;
     private String password;
@@ -18,7 +18,7 @@ public class SoftTokenRequest {
     private String keyspec;
     private String keyalg;
 
-    public SoftTokenRequest(String userName, String password, boolean clearPwd, String subjectDN, String CaName, String tokenType, int status, String email, String subjectAltName, String endEntityProfileName, String certificateProfileName, String startTime, String hardTokenS, String keyspec, String keyalg) {
+    public RequestOfSoftTokenRequestDto(String userName, String password, boolean clearPwd, String subjectDN, String CaName, String tokenType, int status, String email, String subjectAltName, String endEntityProfileName, String certificateProfileName, String startTime, String hardTokenS, String keyspec, String keyalg) {
         this.userName = userName;
         this.password = password;
         this.clearPwd = clearPwd;

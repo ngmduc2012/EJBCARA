@@ -1,19 +1,17 @@
-package cmc.vn.ejbca.RA.controllers;
+package cmc.vn.ejbca.RA.service;
 
-import cmc.vn.ejbca.RA.responds.DeleteUser;
-import cmc.vn.ejbca.RA.responds.EndEntityList;
-import cmc.vn.ejbca.RA.responds.FindUsers;
-import cmc.vn.ejbca.RA.responds.UserAPI;
+import cmc.vn.ejbca.RA.dto.request.RequestOfRevokeUserDto;
+import cmc.vn.ejbca.RA.dto.request.RequestOfFindUsersDto;
+import cmc.vn.ejbca.RA.dto.request.RequestOfUserAPIDto;
 import cmc.vn.ejbca.RA.response.ResponseObject;
 import cmc.vn.ejbca.RA.response.ResponseStatus;
-import org.bouncycastle.its.asn1.EndEntityType;
 import org.ejbca.core.protocol.ws.client.gen.EjbcaWS;
 import org.ejbca.core.protocol.ws.client.gen.UserDataVOWS;
 import org.ejbca.core.protocol.ws.client.gen.UserMatch;
 
 import java.util.List;
 
-public class User {
+public class UserService {
 
     /**
      * Add or Edit User
@@ -28,7 +26,7 @@ public class User {
         }
     }
 
-    public ResponseObject<Boolean> addOrEditUser(UserDataVOWS userDataVOWS, EjbcaWS ejbcaraws, UserAPI userAPI) throws Exception {
+    public ResponseObject<Boolean> addOrEditUser(UserDataVOWS userDataVOWS, EjbcaWS ejbcaraws, RequestOfUserAPIDto userAPI) throws Exception {
 
         ResponseObject<Boolean> res = new ResponseObject<>(true, ResponseStatus.DO_SERVICE_SUCCESSFUL);
         //Check Empty values
@@ -126,7 +124,7 @@ public class User {
         }
     }
 
-    public ResponseObject<List<UserDataVOWS>> findUsers(EjbcaWS ejbcaraws, FindUsers findUsers) throws Exception {
+    public ResponseObject<List<UserDataVOWS>> findUsers(EjbcaWS ejbcaraws, RequestOfFindUsersDto findUsers) throws Exception {
 
         ResponseObject<List<UserDataVOWS>> res = new ResponseObject<>(true, ResponseStatus.DO_SERVICE_SUCCESSFUL);
 
@@ -179,7 +177,7 @@ public class User {
         }
     }
 
-    public ResponseObject<Boolean> revokeUserService(EjbcaWS ejbcaraws, DeleteUser deleteUser) {
+    public ResponseObject<Boolean> revokeUserService(EjbcaWS ejbcaraws, RequestOfRevokeUserDto deleteUser) {
         ResponseObject<Boolean> res = new ResponseObject<>(true, ResponseStatus.DO_SERVICE_SUCCESSFUL);
 
         try {

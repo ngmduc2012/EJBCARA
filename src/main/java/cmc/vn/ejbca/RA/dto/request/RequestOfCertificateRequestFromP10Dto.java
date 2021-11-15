@@ -1,6 +1,6 @@
-package cmc.vn.ejbca.RA.responds;
+package cmc.vn.ejbca.RA.dto.request;
 
-public class CertificateRequestFromP10 {
+public class RequestOfCertificateRequestFromP10Dto {
     String keySpec;
     String keyalgorithmRsa;
     String signatureAlgorithm;
@@ -10,7 +10,7 @@ public class CertificateRequestFromP10 {
     String hardTokenSN;
     String responseType;
 
-    public CertificateRequestFromP10(String keySpec, String keyalgorithmRsa, String signatureAlgorithm, String dn, String userName, String password, String hardTokenSN, String responseType) {
+    public RequestOfCertificateRequestFromP10Dto(String keySpec, String keyalgorithmRsa, String signatureAlgorithm, String dn, String userName, String password, String hardTokenSN, String responseType) {
         this.keySpec = keySpec;
         this.keyalgorithmRsa = keyalgorithmRsa;
         this.signatureAlgorithm = signatureAlgorithm;

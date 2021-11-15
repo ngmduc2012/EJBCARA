@@ -1,10 +1,10 @@
-package cmc.vn.ejbca.RA.responds;
+package cmc.vn.ejbca.RA.dto.respond;
 
-public class Keys {
+public class KeysDto {
     String publicKey;
     String privateKey;
 
-    public Keys(String publicKey, String privateKey) {
+    public KeysDto(String publicKey, String privateKey) {
         this.publicKey = publicKey;
         this.privateKey = privateKey;
     }

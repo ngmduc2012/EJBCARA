@@ -1,11 +1,11 @@
-package cmc.vn.ejbca.RA.responds;
+package cmc.vn.ejbca.RA.dto.request;
 
-public class DeleteUser {
+public class RequestOfRevokeUserDto {
     String userName;
     int reason;
     boolean decision;
 
-    public DeleteUser(String userName, int reason, boolean decision) {
+    public RequestOfRevokeUserDto(String userName, int reason, boolean decision) {
         this.userName = userName;
         this.reason = reason;
         this.decision = decision;

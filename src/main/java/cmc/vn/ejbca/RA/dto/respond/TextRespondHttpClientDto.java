@@ -1,6 +1,6 @@
-package cmc.vn.ejbca.RA.responds;
+package cmc.vn.ejbca.RA.dto.respond;
 
-public class TextRespondHttpClient {
+public class TextRespondHttpClientDto {
     String respond;
 
     public String getRespond() {
@@ -11,7 +11,7 @@ public class TextRespondHttpClient {
         this.respond = respond;
     }
 
-    public TextRespondHttpClient(String respond) {
+    public TextRespondHttpClientDto(String respond) {
         this.respond = respond;
     }
 }

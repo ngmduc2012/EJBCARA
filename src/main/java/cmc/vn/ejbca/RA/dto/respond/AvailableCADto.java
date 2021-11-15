@@ -1,10 +1,10 @@
-package cmc.vn.ejbca.RA.responds;
+package cmc.vn.ejbca.RA.dto.respond;
 
-public class AvailableCA {
+public class AvailableCADto {
     String name;
     int id;
 
-    public AvailableCA(String name, int id) {
+    public AvailableCADto(String name, int id) {
         this.name = name;
         this.id = id;
     }

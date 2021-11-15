@@ -1,10 +1,10 @@
-package cmc.vn.ejbca.RA.responds;
+package cmc.vn.ejbca.RA.dto.respond;
 
-public class CAs {
+public class CAsDto {
     String nameCA;
     int idCA;
 
-    public CAs(String nameCA, int idCA) {
+    public CAsDto(String nameCA, int idCA) {
         this.nameCA = nameCA;
         this.idCA = idCA;
     }

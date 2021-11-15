@@ -1,13 +1,13 @@
-package cmc.vn.ejbca.RA.responds;
+package cmc.vn.ejbca.RA.dto.request;
 
-public class PKCS10Certification {
+public class RequestOfPKCS10CertificationDto {
 
     String keySpec;
     String keyalgorithmRsa;
     String signatureAlgorithm;
     String dn;
 
-    public PKCS10Certification(String keySpec, String keyalgorithmRsa, String signatureAlgorithm, String dn) {
+    public RequestOfPKCS10CertificationDto(String keySpec, String keyalgorithmRsa, String signatureAlgorithm, String dn) {
         this.keySpec = keySpec;
         this.keyalgorithmRsa = keyalgorithmRsa;
         this.signatureAlgorithm = signatureAlgorithm;

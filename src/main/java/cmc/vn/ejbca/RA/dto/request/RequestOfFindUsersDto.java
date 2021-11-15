@@ -1,12 +1,12 @@
-package cmc.vn.ejbca.RA.responds;
+package cmc.vn.ejbca.RA.dto.request;
 
 import java.util.List;
 
-public class FindUsers {
+public class RequestOfFindUsersDto {
     String search;
     List<Integer> usermatch;
 
-    public FindUsers(String search, List<Integer> usermatch) {
+    public RequestOfFindUsersDto(String search, List<Integer> usermatch) {
         this.search = search;
         this.usermatch = usermatch;
     }

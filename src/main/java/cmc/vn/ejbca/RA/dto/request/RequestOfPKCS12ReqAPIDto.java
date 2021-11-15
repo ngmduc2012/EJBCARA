@@ -1,6 +1,6 @@
-package cmc.vn.ejbca.RA.responds;
+package cmc.vn.ejbca.RA.dto.request;
 
-public class PKCS12ReqAPI {
+public class RequestOfPKCS12ReqAPIDto {
 
     String userName;
     String password;
@@ -8,7 +8,7 @@ public class PKCS12ReqAPI {
     String keyspec;
     String keyalg;
 
-    public PKCS12ReqAPI(String userName, String password, String hardTokenSN, String keyspec, String keyalg) {
+    public RequestOfPKCS12ReqAPIDto(String userName, String password, String hardTokenSN, String keyspec, String keyalg) {
         this.userName = userName;
         this.password = password;
         this.hardTokenSN = hardTokenSN;

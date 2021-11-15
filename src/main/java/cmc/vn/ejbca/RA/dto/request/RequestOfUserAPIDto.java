@@ -1,9 +1,9 @@
-package cmc.vn.ejbca.RA.responds;
+package cmc.vn.ejbca.RA.dto.request;
 
 import javax.persistence.Entity;
 
 @Entity
-public class UserAPI {
+public class RequestOfUserAPIDto {
 
     private String userName;
     private String password;
@@ -18,7 +18,7 @@ public class UserAPI {
     private String certificateProfileName;
     private String startTime;
 
-    public UserAPI(String userName, String password, boolean clearPwd, String subjectDN, String CaName, String tokenType, int status, String email, String subjectAltName, String endEntityProfileName, String certificateProfileName, String startTime) {
+    public RequestOfUserAPIDto(String userName, String password, boolean clearPwd, String subjectDN, String CaName, String tokenType, int status, String email, String subjectAltName, String endEntityProfileName, String certificateProfileName, String startTime) {
         this.userName = userName;
         this.password = password;
         this.clearPwd = clearPwd;

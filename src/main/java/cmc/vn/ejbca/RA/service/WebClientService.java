@@ -1,4 +1,4 @@
-package cmc.vn.ejbca.RA.controllers;
+package cmc.vn.ejbca.RA.service;
 
 import org.bouncycastle.asn1.DERSet;
 import org.bouncycastle.asn1.x509.X509Name;
@@ -7,7 +7,7 @@ import org.cesecore.util.CertTools;
 
 import java.security.KeyPair;
 
-public class WebClient {
+public class WebClientService {
 
     /**
      * Generate PKCS10 Request

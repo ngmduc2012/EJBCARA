@@ -1,15 +1,12 @@
-package cmc.vn.ejbca.RA.responds;
+package cmc.vn.ejbca.RA.dto.request;
 
-public class CheckRevokation {
-
+public class RequestOfFindCertsDto {
     String userName;
     boolean onlyValid;
-    int idCert;
 
-    public CheckRevokation(String userName, boolean onlyValid, int idCert) {
+    public RequestOfFindCertsDto(String userName, boolean onlyValid) {
         this.userName = userName;
         this.onlyValid = onlyValid;
-        this.idCert = idCert;
     }
 
     public String getUserName() {
@@ -18,9 +15,5 @@ public class CheckRevokation {
 
     public boolean isOnlyValid() {
         return onlyValid;
-    }
-
-    public int getIdCert() {
-        return idCert;
     }
 }

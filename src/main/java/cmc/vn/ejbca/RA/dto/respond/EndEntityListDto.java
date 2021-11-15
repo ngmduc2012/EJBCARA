@@ -1,14 +1,14 @@
-package cmc.vn.ejbca.RA.responds;
+package cmc.vn.ejbca.RA.dto.respond;
 
 import java.util.List;
 
-public class EndEntityList {
+public class EndEntityListDto {
     String name;
     int id;
-    List<CAs> cAsList;
-    List<CPs> cPsList;
+    List<CAsDto> cAsList;
+    List<CPsDto> cPsList;
 
-    public EndEntityList(String name, int id, List<CAs> cAsList, List<CPs> cPsList) {
+    public EndEntityListDto(String name, int id, List<CAsDto> cAsList, List<CPsDto> cPsList) {
         this.name = name;
         this.id = id;
         this.cAsList = cAsList;
@@ -23,11 +23,11 @@ public class EndEntityList {
         return id;
     }
 
-    public List<CAs> getcAsList() {
+    public List<CAsDto> getcAsList() {
         return cAsList;
     }
 
-    public List<CPs> getcPsList() {
+    public List<CPsDto> getcPsList() {
         return cPsList;
     }
 }

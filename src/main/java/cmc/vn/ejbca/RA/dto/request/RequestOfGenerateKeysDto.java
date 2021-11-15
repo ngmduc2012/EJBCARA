@@ -1,10 +1,10 @@
-package cmc.vn.ejbca.RA.responds;
+package cmc.vn.ejbca.RA.dto.request;
 
-public class GenerateKeys {
+public class RequestOfGenerateKeysDto {
     String keySpec;
     String keyalgorithmRsa;
 
-    public GenerateKeys(String keySpec, String keyalgorithmRsa) {
+    public RequestOfGenerateKeysDto(String keySpec, String keyalgorithmRsa) {
         this.keySpec = keySpec;
         this.keyalgorithmRsa = keyalgorithmRsa;
     }

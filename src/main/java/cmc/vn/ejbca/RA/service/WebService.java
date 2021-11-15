@@ -1,23 +1,19 @@
-package cmc.vn.ejbca.RA.controllers;
+package cmc.vn.ejbca.RA.service;
 
-import cmc.vn.ejbca.RA.responds.*;
+import cmc.vn.ejbca.RA.dto.respond.*;
 import cmc.vn.ejbca.RA.response.ResponseObject;
 import cmc.vn.ejbca.RA.response.ResponseStatus;
+import cmc.vn.ejbca.RA.util.Units;
 import org.bouncycastle.util.encoders.Base64;
 import org.cesecore.keys.util.KeyTools;
 import org.cesecore.util.CertTools;
 import org.cesecore.util.CryptoProviderTools;
 import org.ejbca.core.protocol.ws.client.gen.*;
 import org.ejbca.core.protocol.ws.common.KeyStoreHelper;
-import org.hibernate.internal.util.xml.XmlDocument;
 import org.springframework.web.multipart.MultipartFile;
-import org.w3c.dom.Document;
-import org.xml.sax.InputSource;
 
 
 import javax.xml.namespace.QName;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import java.beans.XMLDecoder;
 import java.io.*;
 import java.net.URL;
@@ -31,7 +27,7 @@ import java.util.Enumeration;
 import java.util.List;
 
 
-public class WebServiceConnection {
+public class WebService {
     public String pathFileP12 = "src\\p12\\superadmin.p12";
     public String pathFileTrustStore = "src\\p12\\truststore.jks";
     public String passwordP12 = ""; //if upload a wrong P12 password at the first time, we cannot connect with another visit, we have to restart server
@@ -123,10 +119,10 @@ public class WebServiceConnection {
     /**
      * Get Available CAs
      **/
-    public ResponseObject<List<AvailableCA>> getAvailableCA(EjbcaWS ejbcaraws) throws Exception {
-        ResponseObject<List<AvailableCA>> res = new ResponseObject<>(true, ResponseStatus.DO_SERVICE_SUCCESSFUL);
+    public ResponseObject<List<AvailableCADto>> getAvailableCA(EjbcaWS ejbcaraws) throws Exception {
+        ResponseObject<List<AvailableCADto>> res = new ResponseObject<>(true, ResponseStatus.DO_SERVICE_SUCCESSFUL);
 
-        List<AvailableCA> availableCAList = new ArrayList<AvailableCA>();
+        List<AvailableCADto> availableCAList = new ArrayList<AvailableCADto>();
         System.out.println("\n\n");
         // if no AvailableCA be getted
         if (ejbcaraws.getAvailableCAs().isEmpty()) {
@@ -137,7 +133,7 @@ public class WebServiceConnection {
                 for (NameAndId i : ejbcaraws.getAvailableCAs()
                 ) {
                     // add AvailableCA to list
-                    availableCAList.add(new AvailableCA(i.getName(), i.getId()));
+                    availableCAList.add(new AvailableCADto(i.getName(), i.getId()));
                 }
                 res.setData(availableCAList);
             } catch (Exception e) {
@@ -181,11 +177,11 @@ public class WebServiceConnection {
     /**
      * Get End Entity Profile
      **/
-    public ResponseObject<List<EndEntityList>> getEndEntity(EjbcaWS ejbcaraws) throws Exception {
-        ResponseObject<List<EndEntityList>> res = new ResponseObject<>(true, ResponseStatus.DO_SERVICE_SUCCESSFUL);
+    public ResponseObject<List<EndEntityListDto>> getEndEntity(EjbcaWS ejbcaraws) throws Exception {
+        ResponseObject<List<EndEntityListDto>> res = new ResponseObject<>(true, ResponseStatus.DO_SERVICE_SUCCESSFUL);
 
         System.out.println("\n\n");
-        List<EndEntityList> endEntityList = new ArrayList<EndEntityList>();
+        List<EndEntityListDto> endEntityList = new ArrayList<EndEntityListDto>();
         // if get no Authorized End Entity Profiles
         if (ejbcaraws.getAuthorizedEndEntityProfiles().isEmpty()) {
             System.out.println("No End Entity Profile");
@@ -195,7 +191,7 @@ public class WebServiceConnection {
                 for (NameAndId i : ejbcaraws.getAuthorizedEndEntityProfiles()
                 ) {
                     // add list
-                    endEntityList.add(new EndEntityList(
+                    endEntityList.add(new EndEntityListDto(
                             i.getName(), //name
                             i.getId(),   //id
                             availableCA(ejbcaraws.getAvailableCAsInProfile(i.getId())), //list Certificate Profiles
@@ -213,30 +209,30 @@ public class WebServiceConnection {
         return res;
     }
 
-    public List<CPs> availableCP(List<NameAndId> available) {
-        List<CPs> cPsList = new ArrayList<CPs>();
+    public List<CPsDto> availableCP(List<NameAndId> available) {
+        List<CPsDto> cPsList = new ArrayList<CPsDto>();
         if (available.isEmpty()) {
             System.out.println("No Available Certificate Profiles");
         } else {
             for (NameAndId i : available
             ) {
                 //Add list
-                cPsList.add(new CPs(i.getName(), i.getId()));
+                cPsList.add(new CPsDto(i.getName(), i.getId()));
             }
         }
         //return list Certificate Profiles (even null)
         return cPsList;
     }
 
-    public List<CAs> availableCA(List<NameAndId> available) {
-        List<CAs> cAsList = new ArrayList<CAs>();
+    public List<CAsDto> availableCA(List<NameAndId> available) {
+        List<CAsDto> cAsList = new ArrayList<CAsDto>();
         if (available.isEmpty()) {
             System.out.println("No Available CAs Profiles");
         } else {
             for (NameAndId i : available
             ) {
                 //Add list
-                cAsList.add(new CAs(i.getName(), i.getId()));
+                cAsList.add(new CAsDto(i.getName(), i.getId()));
             }
         }
         //return list CAs (even null)

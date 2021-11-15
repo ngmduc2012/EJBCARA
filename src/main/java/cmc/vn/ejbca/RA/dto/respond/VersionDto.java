@@ -1,9 +1,9 @@
-package cmc.vn.ejbca.RA.responds;
+package cmc.vn.ejbca.RA.dto.respond;
 
-public class Version {
+public class VersionDto {
     String version;
 
-    public Version(String version) {
+    public VersionDto(String version) {
         this.version = version;
     }
 
